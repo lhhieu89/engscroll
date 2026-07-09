@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { Download, Link as LinkIcon, Check, Share as ShareMore } from "lucide-react";
 import type { FeedCard } from "@/lib/types";
 import { shareInfoFor } from "@/lib/share";
@@ -24,6 +25,7 @@ export default function ShareStrip({
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
   const [canNativeShare, setCanNativeShare] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   const info = shareInfoFor(card);
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -85,21 +87,77 @@ export default function ShareStrip({
     onDone();
   }
 
+  // Rasterise the REAL card DOM (same CSS the user sees) so the download is
+  // pixel-identical, rather than a re-drawn approximation. Captures the live
+  // card node (excluding the action bar) then composites it onto the grey feed
+  // background with a small EngScroll watermark. Falls back to the server image.
   async function downloadImage() {
     setSaving(true);
     try {
-      const res = await fetch(imageUrl);
-      const blob = await res.blob();
-      const href = URL.createObjectURL(blob);
+      const card = rootRef.current?.closest(".post") as HTMLElement | null;
+      if (!card) throw new Error("card node not found");
+      const scale = Math.max(2, window.devicePixelRatio || 1);
+
+      // Crop out the (removed) action bar's height so there's no empty gap:
+      // html-to-image sizes to the full node height even when a child is filtered
+      // out, and .post has overflow:hidden so a smaller height clips cleanly.
+      const rect = card.getBoundingClientRect();
+      const bar = card.querySelector("[data-noexport]") as HTMLElement | null;
+      const w = Math.round(rect.width);
+      const h = Math.round(rect.height - (bar ? bar.getBoundingClientRect().height : 0));
+
+      // No backgroundColor → transparent outside the card's rounded border, so
+      // the corners show the grey feed behind them instead of white notches.
+      const cardUrl = await toPng(card, {
+        pixelRatio: scale,
+        width: w,
+        height: h,
+        filter: (n) =>
+          !(n instanceof HTMLElement && n.hasAttribute("data-noexport")),
+        cacheBust: true,
+      });
+
+      const img = new Image();
+      img.src = cardUrl;
+      await img.decode();
+
+      const pad = Math.round(16 * scale);
+      const footH = Math.round(46 * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width + pad * 2;
+      canvas.height = img.height + pad + footH;
+      const g = canvas.getContext("2d");
+      if (!g) throw new Error("no 2d context");
+
+      g.fillStyle = "#e9ebee"; // grey feed background
+      g.fillRect(0, 0, canvas.width, canvas.height);
+      g.drawImage(img, pad, pad);
+
+      // EngScroll watermark under the card.
+      const fy = pad + img.height + footH / 2;
+      g.textBaseline = "middle";
+      g.font = `800 ${Math.round(15 * scale)}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif`;
+      let x = pad + Math.round(4 * scale);
+      g.fillStyle = "#1877f2";
+      g.fillText("Eng", x, fy);
+      x += g.measureText("Eng").width;
+      g.fillStyle = "#050505";
+      g.fillText("Scroll", x, fy);
+      g.font = `600 ${Math.round(14 * scale)}px -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif`;
+      g.fillStyle = "#65676b";
+      const rt = "engscroll.com";
+      g.fillText(rt, canvas.width - pad - g.measureText(rt).width, fy);
+
+      const dataUrl = canvas.toDataURL("image/png");
       const a = document.createElement("a");
-      a.href = href;
+      a.href = dataUrl;
       a.download = `${info.imageName || "engscroll"}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      URL.revokeObjectURL(href);
       track("download_image");
     } catch {
+      // Fallback: the server-rendered card image.
       window.open(imageUrl, "_blank", "noopener,noreferrer");
     } finally {
       setSaving(false);
@@ -110,7 +168,7 @@ export default function ShareStrip({
   const e = encodeURIComponent;
 
   return (
-    <div className="fade-up flex gap-1 overflow-x-auto border-t border-[var(--border)] px-2 py-2">
+    <div ref={rootRef} className="fade-up flex gap-1 overflow-x-auto border-t border-[var(--border)] px-2 py-2">
       <Chip label={saving ? "Đang tạo…" : "Tải ảnh"} onClick={downloadImage} disabled={saving} highlight>
         <Download size={20} className="text-[var(--accent)]" />
       </Chip>

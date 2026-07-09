@@ -221,7 +221,7 @@ export default function Card({ card, onReact, onSave, onAnswer, hideActions }: C
       {/* action bar: reactions (OK/Mới) left, save + share on the right. The
           share strip reveals horizontally below the bar (Facebook-style). */}
       {!hideActions && (
-        <div ref={shareRef}>
+        <div ref={shareRef} data-noexport>
           <div className="flex items-center justify-between border-t border-[var(--border)] px-2 py-1">
             <div className="flex items-center gap-1">
               <ActionBtn

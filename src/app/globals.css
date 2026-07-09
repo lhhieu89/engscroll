@@ -43,7 +43,7 @@ button:disabled,
 /* Facebook-style continuous feed: the document scrolls; cards stack. */
 .feed-col {
   width: 100%;
-  max-width: 560px;
+  max-width: 680px;
   margin: 0 auto;
   padding: 12px 12px 96px;
 }

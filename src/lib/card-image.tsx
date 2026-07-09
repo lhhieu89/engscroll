@@ -11,10 +11,16 @@ import type {
   VideoContent,
 } from "./types";
 
-// Square social image that mirrors the feed <Card> 1:1 — same chip, colours and
-// layout — so "Tải ảnh" saves exactly what the learner sees. 1080×1080 fits
-// Instagram / Facebook Story feeds.
-export const CARD_IMG_SIZE = { width: 1080, height: 1080 };
+// Social image that mirrors the feed <Card> 1:1 — same chip, colours and layout —
+// so "Tải ảnh" saves exactly what the learner sees. Width is fixed; the height
+// fits the card content (the card sitting on the grey feed), instead of a forced
+// square, so the download matches the on-screen proportions.
+const IMG_W = 1080;
+const OUTER_X = 24; // grey feed margin left/right
+const OUTER_Y = 28; // grey feed margin top/bottom
+const CARD_PAD = 56;
+const CONTENT_W = IMG_W - 2 * OUTER_X - 2 * CARD_PAD; // usable text width
+const EXBOX_INNER = CONTENT_W - 2 * 28; // example box has its own padding
 
 const META: Record<CardType, { label: string; color: string; bg: string; icon: string[] }> = {
   vocab: {
@@ -199,6 +205,71 @@ function Body({ type, content }: { type: CardType; content: CardContent }) {
   );
 }
 
+// --- height estimation, so the image fits the card instead of a forced square -
+function estLines(text: string, fs: number, width: number): number {
+  const len = String(text || "").length;
+  const cpl = Math.max(1, Math.floor(width / (fs * 0.54)));
+  return Math.max(1, Math.ceil(len / cpl));
+}
+function estText(text: string, fs: number, width: number, lh = 1.32): number {
+  return estLines(text, fs, width) * fs * lh;
+}
+function estBox(en: string, vi?: string): number {
+  return 28 + 48 + estText(en, 38, EXBOX_INNER, 1.35) + (vi ? 8 + estText(vi, 30, EXBOX_INNER) : 0);
+}
+function estimateBody(type: CardType, content: CardContent): number {
+  try {
+    if (type === "vocab") {
+      const c = content as VocabContent;
+      let h = headline(c.word) * 1.2;
+      if (c.ipa_uk || c.ipa || c.ipa_us) h += 14 + 34 * 1.32;
+      h += 18 + estText(c.meaning_vi, 44, CONTENT_W);
+      if (c.example?.trim()) h += estBox(c.example, c.example_vi);
+      return h;
+    }
+    if (type === "expression") {
+      const c = content as ExpressionContent;
+      let h = headline(c.text) * 1.2;
+      if (c.pronounce) h += 10 + estText(c.pronounce, 32, CONTENT_W);
+      h += 18 + estText(c.meaning_vi, 44, CONTENT_W);
+      if (c.example) h += estBox(c.example, c.example_vi);
+      return h;
+    }
+    if (type === "grammar") {
+      const c = content as GrammarContent;
+      const isTip = c.kind === "tip" || (!c.dont && !c.say);
+      if (isTip) {
+        let h = 0;
+        if (c.title) h += 12 + 28 * 1.3;
+        h += estText(c.explain_vi, 46, CONTENT_W - 60, 1.3);
+        if (c.examples?.[0]) h += estBox(c.examples[0], c.examples_vi?.[0]);
+        return h;
+      }
+      let h = 44 + estText(c.dont || "", 42, CONTENT_W - 60);
+      h += 18 + 44 + estText(c.say || "", 42, CONTENT_W - 60);
+      h += 18 + estText(c.explain_vi, 34, CONTENT_W);
+      return h;
+    }
+    if (type === "quote") {
+      const c = content as QuoteContent;
+      let h = estText(c.quote, headline(c.quote), CONTENT_W, 1.2);
+      h += 18 + estText(c.meaning_vi, 40, CONTENT_W);
+      if (c.author) h += 12 + 32 * 1.3;
+      return h;
+    }
+    if (type === "quiz") {
+      const c = content as QuizContent;
+      let h = estText(c.question, 50, CONTENT_W, 1.25) + 26;
+      for (const o of c.options.slice(0, 4)) h += 36 + estText(o, 36, CONTENT_W - 48) + 14;
+      return h;
+    }
+    const c = content as VideoContent;
+    return headline(c.title) * 1.2 + 16 + estText(c.meaning_vi, 40, CONTENT_W);
+  } catch {
+    return 520;
+  }
+}
+
 export function renderCardImage(
   type: CardType,
   content: CardContent,
@@ -208,6 +279,15 @@ export function renderCardImage(
   const cefr = (content as { cefr?: string }).cefr;
   // Mirror the feed card's meta line exactly: cefr · level · topic.
   const sub = [cefr, meta2.level, meta2.topic].filter(Boolean).join(" · ");
+
+  // Fit the image to the card: card padding + header + body + footer, plus the
+  // grey feed margin. A small safety buffer avoids clipping tall content.
+  const HEADER_H = 96 + 36;
+  const FOOTER_H = 28 + 28 + 48; // marginTop + paddingTop + mark
+  const bodyH = estimateBody(type, content) * 1.04 + 16;
+  const cardH = CARD_PAD * 2 + HEADER_H + bodyH + FOOTER_H;
+  const height = Math.round(Math.min(1500, Math.max(560, cardH + 2 * OUTER_Y)));
+
   return new ImageResponse(
     (
       <div
@@ -215,10 +295,8 @@ export function renderCardImage(
           display: "flex",
           width: "100%",
           height: "100%",
-          alignItems: "center",
-          justifyContent: "center",
           background: "#e9ebee",
-          padding: 60,
+          padding: `${OUTER_Y}px ${OUTER_X}px`,
           fontFamily: "sans-serif",
         }}
       >
@@ -226,29 +304,32 @@ export function renderCardImage(
           style={{
             display: "flex",
             flexDirection: "column",
+            justifyContent: "space-between",
             width: "100%",
             background: "#ffffff",
-            borderRadius: 36,
+            borderRadius: 32,
             border: `1px solid ${BORDER}`,
             boxShadow: "0 8px 30px rgba(0,0,0,0.08)",
-            padding: 56,
+            padding: CARD_PAD,
           }}
         >
-          {/* header — mirrors the feed card chip */}
-          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 36 }}>
-            <div style={{ display: "flex", width: 96, height: 96, borderRadius: 9999, background: meta.bg, alignItems: "center", justifyContent: "center" }}>
-              <Glyph paths={meta.icon} color={meta.color} size={48} />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {/* header — mirrors the feed card chip */}
+            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 36 }}>
+              <div style={{ display: "flex", width: 96, height: 96, borderRadius: 9999, background: meta.bg, alignItems: "center", justifyContent: "center" }}>
+                <Glyph paths={meta.icon} color={meta.color} size={48} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: 36, fontWeight: 700, color: INK }}>{meta.label}</span>
+                <span style={{ fontSize: 26, color: MUTED }}>{sub}</span>
+              </div>
             </div>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: 36, fontWeight: 700, color: INK }}>{meta.label}</span>
-              <span style={{ fontSize: 26, color: MUTED }}>{sub}</span>
-            </div>
+
+            <Body type={type} content={content} />
           </div>
 
-          <Body type={type} content={content} />
-
-          {/* footer wordmark */}
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 44, paddingTop: 28, borderTop: `1px solid ${BORDER}` }}>
+          {/* footer wordmark pinned to the card bottom */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 28, paddingTop: 28, borderTop: `1px solid ${BORDER}` }}>
             <BrandMark size={48} />
             <span style={{ fontSize: 30, fontWeight: 800, color: INK }}>
               <span style={{ color: "#1877f2" }}>Eng</span>Scroll
@@ -259,7 +340,8 @@ export function renderCardImage(
       </div>
     ),
     {
-      ...CARD_IMG_SIZE,
+      width: IMG_W,
+      height,
       headers: {
         "cache-control": "public, immutable, no-transform, max-age=2592000, s-maxage=2592000",
       },
