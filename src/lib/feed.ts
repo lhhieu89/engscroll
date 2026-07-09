@@ -86,7 +86,7 @@ function feedSlug(s: string): string {
 // prefix to recover the source key. `vocabrev` before `vocab` (prefix overlap).
 const QUIZ_KEY_PREFIX = /^qz_(?:vocabrev|cloze|vocab|grm|exp|sent|crz)_/;
 // Recover the "topic key" shared between a source card and the quiz built from
-// it, so spaced-pairing can place a quiz shortly AFTER its source in the page.
+// it, so a quiz can be scheduled a SPACED distance after its source in the page.
 function cardKey(r: CandidateRow): string | null {
   if (r.type === "quiz") {
     const k = r.id.replace(QUIZ_KEY_PREFIX, "");
@@ -111,6 +111,13 @@ const QUIZ_WARMUP = 3;
 // heavy user's unseen pool skews quiz now that the quiz bank is large). Repeats
 // of input cards are more on-brand than a quiz flood at the session tail.
 const QUIZ_MAX_SHARE = 0.2;
+// Minimum cards between a source card and a quiz built from it. A quiz placed
+// right after its source is recognition-with-the-answer-still-fresh, not
+// retrieval — the answer was literally the previous card. Requiring a gap means
+// the source has scrolled off-screen, so the quiz tests memory. A paired quiz
+// whose source is more recent than this is skipped in favour of a "cold" quiz
+// (source not shown this page) until the gap opens up.
+const QUIZ_MIN_GAP = 5;
 
 /**
  * Compose a feed page.
@@ -119,9 +126,10 @@ const QUIZ_MAX_SHARE = 0.2;
  * - Interleaves by the fixed FEED_RATIO using smooth weighted round-robin,
  *   guaranteeing no two same-type cards are adjacent (so never two quizzes in a
  *   row).
- * - Caps quiz at QUIZ_MAX_SHARE of the page and prefers quizzes whose source
- *   card already appeared this page (spaced reinforcement), never leading the
- *   page with a quiz.
+ * - Caps quiz at QUIZ_MAX_SHARE of the page, never leads with a quiz, and — when
+ *   a quiz shares a source with a card shown this page — only places it once the
+ *   source is ≥ QUIZ_MIN_GAP cards back, so it tests recall rather than handing
+ *   the answer over on the previous card.
  */
 export async function getFeed(
   uid: string,
@@ -180,56 +188,69 @@ export async function getFeed(
   >;
   const out: CandidateRow[] = [];
   let last: CardType | null = null;
-  const emittedKeys = new Set<string>(); // source keys already shown this page
+  const emittedAt = new Map<string, number>(); // source key → first position shown
   const maxQuiz = Math.max(1, Math.ceil(limit * QUIZ_MAX_SHARE));
   let quizPlaced = 0;
 
-  // Index of the highest-scored quiz whose source already appeared this page
-  // (bucket is score-sorted, so the first match is the best paired quiz).
-  const pairedQuizIndex = () =>
-    buckets.quiz.findIndex((r) => {
-      const k = cardKey(r);
-      return k !== null && emittedKeys.has(k);
-    });
+  // Choose which quiz to place now (bucket is score-sorted, so the first match
+  // in each class is the best-scored). Prefer a PAIRED quiz whose source landed
+  // ≥ QUIZ_MIN_GAP cards ago (spaced retrieval, answer off-screen); else a COLD
+  // quiz whose source hasn't been shown this page (pure recall). A paired quiz
+  // whose source is still too recent is skipped — never test a just-shown answer.
+  const selectQuiz = (): { idx: number; cold: boolean } => {
+    let paired = -1;
+    let cold = -1;
+    for (let i = 0; i < buckets.quiz.length; i++) {
+      const k = cardKey(buckets.quiz[i]);
+      const at = k === null ? undefined : emittedAt.get(k);
+      if (at === undefined) {
+        if (cold < 0) cold = i; // source not shown this page → cold recall
+      } else if (out.length - at >= QUIZ_MIN_GAP && paired < 0) {
+        paired = i; // source shown far enough back → spaced retrieval
+      }
+      // else: source shown too recently → skip (answer still fresh)
+    }
+    if (paired >= 0) return { idx: paired, cold: false };
+    return { idx: cold, cold: true }; // idx === -1 when nothing is placeable
+  };
 
   while (out.length < limit) {
     for (const t of types) credit[t] += FEED_RATIO[t];
 
-    // Candidate types: still have cards, not equal to the previous type, and —
-    // for quiz — under the cap and either paired or past warmup.
+    const quiz = selectQuiz();
+    const quizPlaceable =
+      quiz.idx >= 0 &&
+      quizPlaced < maxQuiz &&
+      last !== "quiz" && // HARD: never two quizzes in a row (end page short instead)
+      !(quiz.cold && out.length < QUIZ_WARMUP); // input-first for cold quizzes
+
+    // Candidate types by credit: has cards, not adjacent (soft for input types).
     let pick: CardType | null = null;
     let bestCredit = -Infinity;
     for (const t of types) {
       if (buckets[t].length === 0) continue;
-      if (t === last && availableTypes(buckets) > 1) continue; // avoid adjacency
       if (t === "quiz") {
-        if (last === "quiz") continue; // HARD: never two quizzes in a row, even
-        // when quiz is the only bucket left — end the page short instead of
-        // dumping an adjacent quiz tail (client paginates).
-        if (quizPlaced >= maxQuiz) continue; // hard display cap
-        if (pairedQuizIndex() < 0 && out.length < QUIZ_WARMUP) continue; // input-first
+        if (!quizPlaceable) continue;
+      } else if (t === last && availableTypes(buckets) > 1) {
+        continue; // avoid adjacency
       }
       if (credit[t] > bestCredit) {
         bestCredit = credit[t];
         pick = t;
       }
     }
-    if (!pick) break; // nothing placeable (e.g. only capped quiz left)
+    if (!pick) break; // nothing placeable (e.g. only too-recent/capped quiz left)
 
-    // For quiz, take the best paired one if any, else the top-scored (fallback).
-    let idx = 0;
-    if (pick === "quiz") {
-      const pi = pairedQuizIndex();
-      idx = pi >= 0 ? pi : 0;
-      quizPlaced++;
-    }
+    const idx = pick === "quiz" ? quiz.idx : 0;
+    if (pick === "quiz") quizPlaced++;
     credit[pick] -= 1;
+    const pos = out.length;
     const chosen = buckets[pick].splice(idx, 1)[0];
     out.push(chosen);
     last = pick;
     if (pick !== "quiz") {
       const k = cardKey(chosen);
-      if (k !== null) emittedKeys.add(k);
+      if (k !== null && !emittedAt.has(k)) emittedAt.set(k, pos);
     }
   }
 
