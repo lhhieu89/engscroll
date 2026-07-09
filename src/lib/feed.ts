@@ -73,13 +73,55 @@ function scoreCard(c: CandidateRow, userLevel: Level | null): number {
   return score;
 }
 
+// Feed slug — MUST match scripts/seed-banks.mjs slug() so a quiz id derived from
+// a word/sentence maps back to the same key as its source vocab/expression card.
+function feedSlug(s: string): string {
+  return String(s)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 56);
+}
+// Quiz ids are `qz_<style>_<slug>` (see seed-banks.mjs emitQuiz). Strip the
+// prefix to recover the source key. `vocabrev` before `vocab` (prefix overlap).
+const QUIZ_KEY_PREFIX = /^qz_(?:vocabrev|cloze|vocab|grm|exp|sent|crz)_/;
+// Recover the "topic key" shared between a source card and the quiz built from
+// it, so spaced-pairing can place a quiz shortly AFTER its source in the page.
+function cardKey(r: CandidateRow): string | null {
+  if (r.type === "quiz") {
+    const k = r.id.replace(QUIZ_KEY_PREFIX, "");
+    return k && k !== r.id ? k : null;
+  }
+  try {
+    const c = JSON.parse(r.content_json) as Record<string, unknown>;
+    const src =
+      r.type === "vocab" ? c.word
+        : r.type === "expression" ? c.text
+        : r.type === "grammar" ? c.say
+        : null;
+    return typeof src === "string" && src ? feedSlug(src) : null;
+  } catch {
+    return null;
+  }
+}
+// Don't open a page with a quiz — show a few input cards first so recall has
+// something to reinforce (input-first).
+const QUIZ_WARMUP = 3;
+// Ceiling on quiz share per page, enforced even when other buckets run dry (a
+// heavy user's unseen pool skews quiz now that the quiz bank is large). Repeats
+// of input cards are more on-brand than a quiz flood at the session tail.
+const QUIZ_MAX_SHARE = 0.2;
+
 /**
  * Compose a feed page.
  * - Pulls published cards with per-user + global state.
  * - Scores them with the adaptive rules.
- * - Interleaves by the fixed 40/25/20/15 ratio using smooth weighted
- *   round-robin, guaranteeing no two same-type cards are adjacent (so never
- *   two quizzes in a row).
+ * - Interleaves by the fixed FEED_RATIO using smooth weighted round-robin,
+ *   guaranteeing no two same-type cards are adjacent (so never two quizzes in a
+ *   row).
+ * - Caps quiz at QUIZ_MAX_SHARE of the page and prefers quizzes whose source
+ *   card already appeared this page (spaced reinforcement), never leading the
+ *   page with a quiz.
  */
 export async function getFeed(
   uid: string,
@@ -130,33 +172,65 @@ export async function getFeed(
     buckets[t].sort((a, b) => scores.get(b.id)! - scores.get(a.id)!),
   );
 
-  // Smooth weighted round-robin interleave with no-adjacent-same-type.
+  // Smooth weighted round-robin interleave with no-adjacent-same-type, a quiz
+  // display cap, and spaced-pairing (quiz after its source card).
   const credit = Object.fromEntries(types.map((t) => [t, 0])) as Record<
     CardType,
     number
   >;
   const out: CandidateRow[] = [];
   let last: CardType | null = null;
+  const emittedKeys = new Set<string>(); // source keys already shown this page
+  const maxQuiz = Math.max(1, Math.ceil(limit * QUIZ_MAX_SHARE));
+  let quizPlaced = 0;
+
+  // Index of the highest-scored quiz whose source already appeared this page
+  // (bucket is score-sorted, so the first match is the best paired quiz).
+  const pairedQuizIndex = () =>
+    buckets.quiz.findIndex((r) => {
+      const k = cardKey(r);
+      return k !== null && emittedKeys.has(k);
+    });
 
   while (out.length < limit) {
     for (const t of types) credit[t] += FEED_RATIO[t];
 
-    // Candidate types: still have cards, and not equal to the previous type.
+    // Candidate types: still have cards, not equal to the previous type, and —
+    // for quiz — under the cap and either paired or past warmup.
     let pick: CardType | null = null;
     let bestCredit = -Infinity;
     for (const t of types) {
       if (buckets[t].length === 0) continue;
       if (t === last && availableTypes(buckets) > 1) continue; // avoid adjacency
+      if (t === "quiz") {
+        if (last === "quiz") continue; // HARD: never two quizzes in a row, even
+        // when quiz is the only bucket left — end the page short instead of
+        // dumping an adjacent quiz tail (client paginates).
+        if (quizPlaced >= maxQuiz) continue; // hard display cap
+        if (pairedQuizIndex() < 0 && out.length < QUIZ_WARMUP) continue; // input-first
+      }
       if (credit[t] > bestCredit) {
         bestCredit = credit[t];
         pick = t;
       }
     }
-    if (!pick) break; // nothing left to place
+    if (!pick) break; // nothing placeable (e.g. only capped quiz left)
 
+    // For quiz, take the best paired one if any, else the top-scored (fallback).
+    let idx = 0;
+    if (pick === "quiz") {
+      const pi = pairedQuizIndex();
+      idx = pi >= 0 ? pi : 0;
+      quizPlaced++;
+    }
     credit[pick] -= 1;
-    out.push(buckets[pick].shift()!);
+    const chosen = buckets[pick].splice(idx, 1)[0];
+    out.push(chosen);
     last = pick;
+    if (pick !== "quiz") {
+      const k = cardKey(chosen);
+      if (k !== null) emittedKeys.add(k);
+    }
   }
 
   return out.map(toFeedCard);

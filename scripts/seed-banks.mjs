@@ -261,21 +261,37 @@ for (const row of sample(clozeEligible, 400)) {
   });
 }
 
-// (f) sentence meaning
-const daily = expression.filter((r) => r.content.category === "daily_sentence" && r.content.meaning_vi);
-const dailyMeanings = [...new Set(daily.map((r) => r.content.meaning_vi))];
-for (const row of sample(daily, 250)) {
-  const correct = row.content.meaning_vi;
-  const distractors = sample(dailyMeanings.filter((m) => m !== correct), 3);
-  if (distractors.length < 3) continue;
-  const options = shuffle([correct, ...distractors]);
-  emitQuiz(`sent_${slug(row.content.text)}`, row.level, "sentences-1000", {
-    question: `“${row.content.text}” nghĩa là gì?`,
-    options, correct: options.indexOf(correct),
-    explain_vi: `“${row.content.text}” = ${correct}`,
-    style: "sentence", source: "derived:sentence",
-  });
+// (f) sentence meaning — derives a "what does this sentence mean?" quiz for a
+// whole category, UNCAPPED. Distractors are drawn from the SAME category so the
+// four options share register/flavor (daily vs crazy-english meanings differ).
+// Two question templates rotate deterministically to reduce feed monotony.
+function deriveSentenceQuizzes({ category, topic, source, idPrefix }) {
+  const rows = expression.filter(
+    (r) => r.content.category === category && r.content.meaning_vi && r.content.text,
+  );
+  const meanings = [...new Set(rows.map((r) => r.content.meaning_vi))];
+  // Need ≥4 distinct meanings in the pool for correct + 3 distractors.
+  if (meanings.length < 4) return;
+  for (const row of rows) {
+    const correct = row.content.meaning_vi;
+    const distractors = sample(meanings.filter((m) => m !== correct), 3);
+    if (distractors.length < 3) continue;
+    const options = shuffle([correct, ...distractors]);
+    const ask = rand() < 0.5
+      ? `“${row.content.text}” nghĩa là gì?`
+      : `Chọn nghĩa đúng của: “${row.content.text}”`;
+    emitQuiz(`${idPrefix}_${slug(row.content.text)}`, row.level, topic, {
+      question: ask,
+      options, correct: options.indexOf(correct),
+      explain_vi: `“${row.content.text}” = ${correct}`,
+      style: "sentence", source,
+    });
+  }
 }
+
+// Nhóm 1: bung hết sentences-1000 (bỏ cap 250) + đấu nối crazy-english (mới).
+deriveSentenceQuizzes({ category: "daily_sentence", topic: "sentences-1000", source: "derived:sentence", idPrefix: "sent" });
+deriveSentenceQuizzes({ category: "crazy_english", topic: "crazy-english", source: "derived:crazy", idPrefix: "crz" });
 
 // ---- write to Postgres ----------------------------------------------------
 
