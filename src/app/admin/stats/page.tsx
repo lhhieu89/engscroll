@@ -10,6 +10,8 @@ interface Overview {
   totalUsers: number;
   totalReactions: number;
   totalSaves: number;
+  totalDownloads: number;
+  totalShares: number;
   avgCardsPerSession: number;
 }
 interface CardStat {
@@ -21,6 +23,8 @@ interface CardStat {
   ok_rate: number;
   new_rate: number;
   save_rate: number;
+  downloads: number;
+  shares: number;
   preview: string;
 }
 
@@ -55,18 +59,21 @@ export default function StatsPage() {
           <Stat label="Users" value={overview.totalUsers} />
           <Stat label="Reactions" value={overview.totalReactions} />
           <Stat label="Saves" value={overview.totalSaves} />
+          <Stat label="Tải ảnh" value={overview.totalDownloads} />
+          <Stat label="Lượt chia sẻ" value={overview.totalShares} />
           <Stat label="Avg cards / session" value={overview.avgCardsPerSession} hint="North Star ≥ 15" />
         </div>
       )}
 
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-[var(--muted)]">Per-card rates</h2>
       <div className="post overflow-x-auto p-2">
-        <table className="w-full min-w-[560px] text-sm">
+        <table className="w-full min-w-[680px] text-sm">
           <thead className="text-left text-xs uppercase text-[var(--muted)]">
             <tr>
               <th className="py-2 pl-2">Card</th><th>Type</th>
               <th className="text-right">Seen</th><th className="text-right">OK</th>
-              <th className="text-right">New</th><th className="text-right pr-2">Save</th>
+              <th className="text-right">New</th><th className="text-right">Save</th>
+              <th className="text-right">Tải</th><th className="text-right pr-2">Share</th>
             </tr>
           </thead>
           <tbody>
@@ -77,7 +84,9 @@ export default function StatsPage() {
                 <td className="text-right">{c.seen}</td>
                 <td className="text-right">{pct(c.ok_rate)}</td>
                 <td className="text-right text-[var(--accent)]">{pct(c.new_rate)}</td>
-                <td className="text-right pr-2 text-[var(--green)]">{pct(c.save_rate)}</td>
+                <td className="text-right text-[var(--green)]">{pct(c.save_rate)}</td>
+                <td className="text-right font-semibold">{c.downloads}</td>
+                <td className="text-right pr-2 font-semibold">{c.shares}</td>
               </tr>
             ))}
           </tbody>

@@ -1,6 +1,6 @@
 import { getCurrentUser } from "@/lib/user";
 import { getAccount } from "@/lib/auth";
-import { getFeed } from "@/lib/feed";
+import { getFeed, getSeenTodayIds } from "@/lib/feed";
 import Feed from "@/components/Feed";
 import AppShell from "@/components/AppShell";
 
@@ -24,10 +24,19 @@ export default async function Home() {
 
   const account = await getAccount(user.id);
   const isGuest = !account || account.provider === "anon";
-  const initial = await getFeed(user.id, user.level, [], 12);
+  const [initial, seenTodayIds] = await Promise.all([
+    getFeed(user.id, user.level, [], 12),
+    getSeenTodayIds(user.id),
+  ]);
   return (
     <AppShell>
-      <Feed initial={initial} streak={user.streak} level={user.level} isGuest={isGuest} />
+      <Feed
+        initial={initial}
+        streak={user.streak}
+        level={user.level}
+        isGuest={isGuest}
+        seenTodayIds={seenTodayIds}
+      />
     </AppShell>
   );
 }

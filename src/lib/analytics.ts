@@ -31,17 +31,21 @@ export interface CardStat {
   ok_rate: number;
   new_rate: number;
   save_rate: number;
+  downloads: number;
+  shares: number;
   preview: string;
 }
 
-// Per-card OK / New / Save rates + seen count (section 8).
+// Per-card OK / New / Save rates + seen count + share/download counts (section 8).
 export async function cardStats(): Promise<CardStat[]> {
   const rows = await q(sql`
     SELECT c.id, c.type, c.level, c.status, c.content_json,
       (SELECT COUNT(*)::int FROM card_views v WHERE v.card_id = c.id) AS seen,
       (SELECT COUNT(*)::int FROM card_reactions r WHERE r.card_id = c.id AND r.reaction='ok')  AS ok,
       (SELECT COUNT(*)::int FROM card_reactions r WHERE r.card_id = c.id AND r.reaction='new') AS nw,
-      (SELECT COUNT(*)::int FROM saved_cards s WHERE s.card_id = c.id) AS sv
+      (SELECT COUNT(*)::int FROM saved_cards s WHERE s.card_id = c.id) AS sv,
+      (SELECT COUNT(*)::int FROM events e WHERE e.card_id = c.id AND e.type='download_image') AS dl,
+      (SELECT COUNT(*)::int FROM events e WHERE e.card_id = c.id AND e.type='share_click') AS sh
     FROM cards c
     ORDER BY seen DESC, c.created_at DESC`);
 
@@ -57,6 +61,8 @@ export async function cardStats(): Promise<CardStat[]> {
       ok_rate: Number(r.ok) / denom,
       new_rate: Number(r.nw) / denom,
       save_rate: Number(r.sv) / denom,
+      downloads: Number(r.dl) || 0,
+      shares: Number(r.sh) || 0,
       preview: previewOf(String(r.content_json)),
     };
   });
@@ -68,6 +74,8 @@ export interface OverviewStat {
   totalUsers: number;
   totalReactions: number;
   totalSaves: number;
+  totalDownloads: number;
+  totalShares: number;
   avgCardsPerSession: number;
 }
 
@@ -85,6 +93,8 @@ export async function overviewStats(): Promise<OverviewStat> {
     totalUsers: await one(sql`SELECT COUNT(*)::int AS n FROM users`),
     totalReactions: await one(sql`SELECT COUNT(*)::int AS n FROM card_reactions`),
     totalSaves: await one(sql`SELECT COUNT(*)::int AS n FROM saved_cards`),
+    totalDownloads: await one(sql`SELECT COUNT(*)::int AS n FROM events WHERE type='download_image'`),
+    totalShares: await one(sql`SELECT COUNT(*)::int AS n FROM events WHERE type='share_click'`),
     avgCardsPerSession: sessions ? Math.round((cardsSeen / sessions) * 10) / 10 : 0,
   };
 }

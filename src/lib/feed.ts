@@ -168,6 +168,18 @@ function availableTypes(buckets: Record<CardType, CandidateRow[]>): number {
   ).length;
 }
 
+// Distinct cards this user has seen today (UTC), so the "X thẻ hôm nay" counter
+// survives navigation instead of resetting to 0 on every feed remount. Returns
+// the ids (capped) — the client seeds them so re-views don't double-count.
+export async function getSeenTodayIds(uid: string): Promise<string[]> {
+  const rows = await q<{ card_id: string }>(sql`
+    SELECT card_id FROM card_views
+    WHERE user_id = ${uid}
+      AND last_seen >= (to_char((now() AT TIME ZONE 'UTC'), 'YYYY-MM-DD') || ' 00:00:00')
+    LIMIT 5000`);
+  return rows.map((r) => r.card_id);
+}
+
 function toFeedCard(r: CandidateRow): FeedCard {
   return {
     id: r.id,

@@ -19,18 +19,24 @@ interface Props {
   streak: number;
   level: Level | null;
   isGuest: boolean;
+  // Cards already seen today (persisted), so the counter reflects the day's
+  // total instead of resetting to 0 when the feed remounts after navigation.
+  seenTodayIds: string[];
 }
 
-export default function Feed({ initial, streak: initialStreak, level, isGuest }: Props) {
+export default function Feed({ initial, streak: initialStreak, level, isGuest, seenTodayIds }: Props) {
   const [cards, setCards] = useState<FeedCard[]>(initial);
   const [exhausted, setExhausted] = useState(initial.length === 0);
   const [streak, setStreak] = useState(initialStreak);
-  const [learned, setLearned] = useState(0);
+  const [learned, setLearned] = useState(seenTodayIds.length);
   const [showSync, setShowSync] = useState(isGuest);
 
   const loadingRef = useRef(false);
   const idsRef = useRef<Set<string>>(new Set(initial.map((c) => c.id)));
   const seenRef = useRef<Set<string>>(new Set());
+  // Cards already counted toward "hôm nay" (seeded from today's persisted views)
+  // so re-seeing a card in a new session never double-counts.
+  const countedRef = useRef<Set<string>>(new Set(seenTodayIds));
   const eventQueue = useRef<{ type: string; cardId?: string }[]>([]);
 
   // --- analytics batching --------------------------------------------------
@@ -140,10 +146,17 @@ export default function Feed({ initial, streak: initialStreak, level, isGuest }:
       for (const e of entries) {
         if (!e.isIntersecting || e.intersectionRatio < 0.5) continue;
         const id = (e.target as HTMLElement).dataset.cardid;
-        if (!id || seenRef.current.has(id)) continue;
-        seenRef.current.add(id);
-        track("seen", id);
-        setLearned((n) => n + 1);
+        if (!id) continue;
+        // Send a "seen" event once per session; count toward "hôm nay" once per
+        // day (across sessions), so navigating away and back doesn't reset it.
+        if (!seenRef.current.has(id)) {
+          seenRef.current.add(id);
+          track("seen", id);
+        }
+        if (!countedRef.current.has(id)) {
+          countedRef.current.add(id);
+          setLearned((n) => n + 1);
+        }
       }
     }, { threshold: [0.5] });
     return () => seenObserver.current?.disconnect();

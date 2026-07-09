@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ThumbsUp,
   Lightbulb,
@@ -9,11 +9,12 @@ import {
   Check,
   X,
   BookOpen,
-  SpellCheck2,
+  SpellCheck,
   CircleHelp,
   Quote as QuoteIcon,
   Play,
   MessagesSquare,
+  MoreHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import type {
@@ -26,13 +27,14 @@ import type {
   VideoContent,
   VocabContent,
 } from "@/lib/types";
+import ShareStrip from "./ShareStrip";
 
 export const TYPE_META: Record<
   FeedCard["type"],
   { label: string; Icon: LucideIcon; color: string; bg: string }
 > = {
   vocab: { label: "Từ vựng", Icon: BookOpen, color: "#1877f2", bg: "#e7f0fe" },
-  grammar: { label: "Ngữ pháp", Icon: SpellCheck2, color: "#e41e3f", bg: "#fdeaed" },
+  grammar: { label: "Ngữ pháp", Icon: SpellCheck, color: "#e41e3f", bg: "#fdeaed" },
   expression: { label: "Mẫu câu", Icon: MessagesSquare, color: "#ea7317", bg: "#fdf0e3" },
   quiz: { label: "Quiz", Icon: CircleHelp, color: "#8b5cf6", bg: "#f0ebfe" },
   quote: { label: "Quote", Icon: QuoteIcon, color: "#0d9488", bg: "#e3f5f2" },
@@ -133,9 +135,31 @@ export default function Card({ card, onReact, onSave, onAnswer, hideActions }: C
     explain_vi: string;
   } | null>(null);
 
+  const [shareOpen, setShareOpen] = useState(false);
+  const shareRef = useRef<HTMLDivElement | null>(null);
+
   const meta = TYPE_META[card.type];
   const isQuiz = card.type === "quiz";
   const canReact = !isQuiz || answer !== null; // quiz unlocks after answering
+
+  // Close the share strip on outside-click / Escape.
+  useEffect(() => {
+    if (!shareOpen) return;
+    function onDown(e: MouseEvent) {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShareOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShareOpen(false);
+    }
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [shareOpen]);
 
   function react(r: Reaction) {
     // Toggle off if already active, otherwise set/switch (FB-style).
@@ -194,35 +218,53 @@ export default function Card({ card, onReact, onSave, onAnswer, hideActions }: C
         )}
       </div>
 
-      {/* action bar: reactions (OK/Mới) grouped left, save on the right */}
+      {/* action bar: reactions (OK/Mới) left, save + share on the right. The
+          share strip reveals horizontally below the bar (Facebook-style). */}
       {!hideActions && (
-        <div className="flex items-center justify-between border-t border-[var(--border)] px-2 py-1">
-          <div className="flex items-center gap-1">
-            <ActionBtn
-              disabled={!canReact}
-              active={reacted === "ok"}
-              onClick={() => react("ok")}
-              Icon={ThumbsUp}
-              label="Biết rồi"
-              activeColor="var(--accent)"
-            />
-            <ActionBtn
-              disabled={!canReact}
-              active={reacted === "new"}
-              onClick={() => react("new")}
-              Icon={Lightbulb}
-              label="Mới biết"
-              activeColor="var(--amber)"
-            />
+        <div ref={shareRef}>
+          <div className="flex items-center justify-between border-t border-[var(--border)] px-2 py-1">
+            <div className="flex items-center gap-1">
+              <ActionBtn
+                disabled={!canReact}
+                active={reacted === "ok"}
+                onClick={() => react("ok")}
+                Icon={ThumbsUp}
+                label="Biết rồi"
+                activeColor="var(--accent)"
+              />
+              <ActionBtn
+                disabled={!canReact}
+                active={reacted === "new"}
+                onClick={() => react("new")}
+                Icon={Lightbulb}
+                label="Mới biết"
+                activeColor="var(--amber)"
+              />
+            </div>
+            <div className="flex items-center gap-0.5">
+              <ActionBtn
+                active={saved}
+                onClick={toggleSave}
+                Icon={Bookmark}
+                label={saved ? "Đã lưu" : "Lưu"}
+                activeColor="var(--save)"
+                fillWhenActive
+              />
+              <button
+                onClick={() => setShareOpen((o) => !o)}
+                aria-haspopup="true"
+                aria-expanded={shareOpen}
+                aria-label="Chia sẻ"
+                className="flex items-center justify-center rounded-lg px-3 py-2 transition hover:bg-[var(--hover)]"
+                style={{ color: shareOpen ? "var(--accent)" : "var(--muted)" }}
+              >
+                <MoreHorizontal size={19} />
+              </button>
+            </div>
           </div>
-          <ActionBtn
-            active={saved}
-            onClick={toggleSave}
-            Icon={Bookmark}
-            label={saved ? "Đã lưu" : "Lưu"}
-            activeColor="var(--save)"
-            fillWhenActive
-          />
+          {shareOpen && (
+            <ShareStrip card={card} onDone={() => setShareOpen(false)} />
+          )}
         </div>
       )}
     </article>

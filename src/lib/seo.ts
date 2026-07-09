@@ -8,6 +8,9 @@ import type {
   ExpressionContent,
   GrammarContent,
   QuizContent,
+  FeedCard,
+  CardType,
+  Level,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -73,6 +76,8 @@ export interface Landing {
   slug: string;
   path: string;
   canonical: string;
+  // The primary card rendered exactly like a feed card at the top of the page.
+  card: FeedCard;
   eyebrow: string; // human category shown as a chip
   term: string; // the display headword / phrase
   headline: string; // H1
@@ -99,6 +104,13 @@ interface CardRow {
   audio_url: string | null;
   slug: string;
 }
+
+// Fields the per-kind builders produce; the rest (card, related, quiz, faq,
+// canonical, path, slug, kind) are attached in getLanding.
+type LandingBase = Omit<
+  Landing,
+  "card" | "related" | "quiz" | "faq" | "canonical" | "path" | "slug" | "kind"
+>;
 
 function clip(s: string, n: number): string {
   s = (s || "").replace(/\s+/g, " ").trim();
@@ -163,7 +175,7 @@ async function relatedQuiz(slug: string): Promise<QuizContent | undefined> {
 
 // --- per-kind builders -----------------------------------------------------
 
-function buildWord(slug: string, rows: CardRow[]): Omit<Landing, "related" | "quiz" | "faq" | "canonical" | "path" | "slug" | "kind"> {
+function buildWord(slug: string, rows: CardRow[]): LandingBase {
   const contents = rows.map((r) => JSON.parse(r.content_json) as VocabContent);
   const first = contents[0];
   const term = first.word;
@@ -197,7 +209,7 @@ function buildWord(slug: string, rows: CardRow[]): Omit<Landing, "related" | "qu
   };
 }
 
-function buildPhrase(slug: string, rows: CardRow[]): Omit<Landing, "related" | "quiz" | "faq" | "canonical" | "path" | "slug" | "kind"> {
+function buildPhrase(slug: string, rows: CardRow[]): LandingBase {
   const c = JSON.parse(rows[0].content_json) as ExpressionContent;
   const catLabel: Record<string, string> = {
     idiom: "Idiom",
@@ -232,7 +244,7 @@ function buildPhrase(slug: string, rows: CardRow[]): Omit<Landing, "related" | "
   };
 }
 
-function buildGrammar(slug: string, rows: CardRow[]): Omit<Landing, "related" | "quiz" | "faq" | "canonical" | "path" | "slug" | "kind"> {
+function buildGrammar(slug: string, rows: CardRow[]): LandingBase {
   const c = JSON.parse(rows[0].content_json) as GrammarContent;
   if (c.kind === "tip" || c.title) {
     const term = c.title || slug;
@@ -313,12 +325,28 @@ async function _getLanding(kind: Kind, slug: string): Promise<Landing | null> {
 
   const faq = buildFaq({ ...base, kind });
 
+  // Primary card, shaped exactly like a feed card so the detail page reuses the
+  // feed <Card>. Per-user state isn't hydrated here (it's a public entry point).
+  const primary = rows[0];
+  const card: FeedCard = {
+    id: primary.id,
+    type: primary.type as CardType,
+    level: primary.level as Level,
+    topic: primary.topic,
+    content: JSON.parse(primary.content_json),
+    audio_url: primary.audio_url,
+    reacted: null,
+    saved: false,
+    answered: null,
+  };
+
   return {
     ...base,
     kind,
     slug,
     path: pathFor(kind, slug),
     canonical: abs(pathFor(kind, slug)),
+    card,
     related,
     quiz,
     faq,
@@ -345,14 +373,6 @@ export async function listSlugs(
   return rows.map((r) => ({ slug: r.slug, term: termOf(kind, r.content_json) || r.slug }));
 }
 
-export async function countSlugs(kind: Kind): Promise<number> {
-  const type = KIND_TYPE[kind];
-  const row = await q1<{ n: string }>(sql`
-    SELECT count(DISTINCT slug) AS n FROM cards
-    WHERE status='published' AND type=${type} AND slug IS NOT NULL`);
-  return Number(row?.n ?? 0);
-}
-
 // --- JSON-LD ---------------------------------------------------------------
 
 export function jsonLd(l: Landing): object[] {
@@ -363,8 +383,7 @@ export function jsonLd(l: Landing): object[] {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "EngScroll", item: abs("/") },
-      { "@type": "ListItem", position: 2, name: KIND_LABEL[l.kind], item: abs("/" + l.kind) },
-      { "@type": "ListItem", position: 3, name: l.term, item: l.canonical },
+      { "@type": "ListItem", position: 2, name: l.term, item: l.canonical },
     ],
   });
 
@@ -377,7 +396,7 @@ export function jsonLd(l: Landing): object[] {
       inDefinedTermSet: {
         "@type": "DefinedTermSet",
         name: "EngScroll — Từ điển tiếng Anh",
-        url: abs("/word"),
+        url: abs("/"),
       },
       url: l.canonical,
     });
