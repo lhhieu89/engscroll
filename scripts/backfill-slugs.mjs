@@ -14,9 +14,15 @@ if (!url) {
 }
 const sql = postgres(url, { max: 8 });
 
-// Must match scripts/build-banks.mjs slug() so ids and slugs stay consistent.
+// Must match the slugify() copies in src/lib/seo.ts and src/lib/share.ts so the
+// stored slug equals the path the share button builds. Transliterates Vietnamese
+// /accents to ASCII (không dấu) so letters survive; pure-ASCII English unchanged.
 function slug(s) {
   return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip combining diacritics (incl. horn)
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")

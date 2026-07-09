@@ -9,9 +9,15 @@ import type {
 } from "./types";
 
 // Client-safe share metadata for a feed card. Mirrors scripts/backfill-slugs.mjs
-// so the computed landing path matches the SEO page's real URL.
+// and src/lib/seo.ts so the computed landing path matches the SEO page's real
+// URL. Transliterates Vietnamese/accents to ASCII (không dấu) so a slug keeps
+// its letters ("ban-khoe-khong") instead of losing them ("b-n-kh-e-kh-ng").
 function slugify(s: string): string {
   return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip combining diacritics (incl. horn)
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -90,15 +96,17 @@ export function shareInfoFor(card: FeedCard): ShareInfo {
     };
   }
 
-  // Types without a dedicated SEO landing page → share the app + a freeform
-  // image built straight from the card content.
+  // Types without a keyword SEO page (quiz/quote/video) get a universal card
+  // permalink /c/<id>/<readable-slug>. The id is the real key; the slug is a
+  // cosmetic, transliterated suffix so the shared link reads nicely and never
+  // falls back to the site root. Image stays a freeform render of the content.
   if (card.type === "quote") {
     const c = card.content as QuoteContent;
     return {
       eyebrow: "Quote",
       title: c.quote,
       text: `"${c.quote}"${c.author ? ` — ${c.author}` : ""}\n${c.meaning_vi}`,
-      path: "/",
+      path: permalink(card.id, c.quote),
       imagePath: ogFreeform("Quote", c.quote, c.author ? `— ${c.author}` : c.meaning_vi),
       imageName: slugify(c.quote) || "engscroll",
     };
@@ -110,7 +118,7 @@ export function shareInfoFor(card: FeedCard): ShareInfo {
       eyebrow: "Quiz",
       title: c.question,
       text: `${c.question}\n${c.options.map((o, i) => `${String.fromCharCode(65 + i)}. ${o}`).join("\n")}`,
-      path: "/",
+      path: permalink(card.id, c.question),
       imagePath: ogFreeform("Quiz", c.question, "Học tiếng Anh bằng cách lướt"),
       imageName: slugify(c.question) || "quiz",
     };
@@ -121,8 +129,15 @@ export function shareInfoFor(card: FeedCard): ShareInfo {
     eyebrow,
     title: c.title,
     text: `${c.title}\n${c.meaning_vi}`,
-    path: "/",
+    path: permalink(card.id, c.title),
     imagePath: ogFreeform(eyebrow, c.title, c.meaning_vi),
     imageName: slugify(c.title) || "engscroll",
   };
+}
+
+// Universal per-card permalink: /c/<id>/<readable-slug>. The route resolves by
+// id alone; the slug is decorative (omitted when the text yields nothing).
+export function permalink(id: string, readable?: string): string {
+  const s = slugify(readable || "");
+  return s ? `/c/${id}/${s}` : `/c/${id}`;
 }

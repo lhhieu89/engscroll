@@ -29,6 +29,14 @@ export const KIND_TYPE: Record<Kind, string> = {
   grammar: "grammar",
 };
 
+// Inverse of KIND_TYPE — the SEO card types that own a keyword landing page.
+// Types absent here (quiz/quote/video) live only at the /c/<id> permalink.
+export const TYPE_KIND: Record<string, Kind> = {
+  vocab: "word",
+  expression: "phrase",
+  grammar: "grammar",
+};
+
 export const KIND_LABEL: Record<Kind, string> = {
   word: "Từ vựng",
   phrase: "Mẫu câu",
@@ -37,8 +45,16 @@ export const KIND_LABEL: Record<Kind, string> = {
 
 export const KINDS: Kind[] = ["word", "phrase", "grammar"];
 
+// Transliterate first so Vietnamese/accented text keeps its letters as ASCII
+// (không dấu) instead of losing them: "Bạn khỏe không" → "ban-khoe-khong", not
+// "b-n-kh-e-kh-ng". Pure-ASCII English is unchanged. MUST stay identical to the
+// copies in src/lib/share.ts and scripts/backfill-slugs.mjs.
 export function slugify(s: string): string {
   return String(s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip combining diacritics (incl. horn)
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
@@ -350,6 +366,37 @@ async function _getLanding(kind: Kind, slug: string): Promise<Landing | null> {
     related,
     quiz,
     faq,
+  };
+}
+
+// A single published card by id, shaped like a feed card, for the universal
+// /c/<id> permalink. Also returns its slug so the route can 301 SEO-typed cards
+// to their keyword URL. Cached per request (metadata + page share one query).
+export interface CardById {
+  card: FeedCard;
+  type: CardType;
+  slug: string | null;
+}
+export const getCardById = cache(_getCardById);
+async function _getCardById(id: string): Promise<CardById | null> {
+  const row = await q1<CardRow>(sql`
+    SELECT id, type, level, topic, content_json, audio_url, slug
+    FROM cards WHERE id = ${id} AND status = 'published' LIMIT 1`);
+  if (!row) return null;
+  return {
+    type: row.type as CardType,
+    slug: row.slug || null,
+    card: {
+      id: row.id,
+      type: row.type as CardType,
+      level: row.level as Level,
+      topic: row.topic,
+      content: JSON.parse(row.content_json),
+      audio_url: row.audio_url,
+      reacted: null,
+      saved: false,
+      answered: null,
+    },
   };
 }
 
