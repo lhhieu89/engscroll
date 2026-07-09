@@ -1,0 +1,22 @@
+[
+  { "dont": "I very like this song.", "say": "I really like this song.", "vi": "\"very\" không đứng trước động từ; dùng \"really\".", "topic": "giao tiếp", "level": "A2" },
+  { "dont": "I have a good news.", "say": "I have good news.", "vi": "\"news\" không đếm được, không dùng \"a\".", "topic": "giao tiếp", "level": "A2" },
+  { "dont": "She is more taller than me.", "say": "She is taller than me.", "vi": "Không dùng \"more\" với tính từ đã ở dạng so sánh -er.", "topic": "giao tiếp", "level": "A2" },
+  { "dont": "I'm going to home.", "say": "I'm going home.", "vi": "\"home\" đi một mình, không cần \"to\".", "topic": "đời sống", "level": "A2" },
+  { "dont": "Everyone are here.", "say": "Everyone is here.", "vi": "\"everyone\" là số ít → dùng \"is\".", "topic": "giao tiếp", "level": "B1" },
+  { "dont": "I didn't went there.", "say": "I didn't go there.", "vi": "Sau \"didn't\" dùng động từ nguyên thể.", "topic": "giao tiếp", "level": "A2" },
+  { "dont": "He said me the truth.", "say": "He told me the truth.", "vi": "\"tell someone\", còn \"say\" không đi kèm tân ngữ người trực tiếp.", "topic": "giao tiếp", "level": "B1" },
+  { "dont": "I'm interesting in music.", "say": "I'm interested in music.", "vi": "Người cảm thấy → \"interested\"; \"interesting\" là gây thú vị.", "topic": "suy nghĩ", "level": "B1" },
+  { "dont": "Can you borrow me a pen?", "say": "Can you lend me a pen?", "vi": "\"lend\" = cho mượn; \"borrow\" = đi mượn.", "topic": "đời sống", "level": "B1" },
+  { "dont": "I look forward to meet you.", "say": "I look forward to meeting you.", "vi": "Sau \"look forward to\" dùng V-ing.", "topic": "công việc", "level": "B2" },
+  { "dont": "I'm agree with you.", "say": "I agree with you.", "vi": "\"agree\" là động từ, không dùng \"am/is/are\".", "topic": "giao tiếp", "level": "B1" },
+  { "dont": "Please explain me this.", "say": "Please explain this to me.", "vi": "\"explain something to someone\".", "topic": "công việc", "level": "B2" },
+  { "dont": "I have 20 years old.", "say": "I am 20 years old.", "vi": "Tuổi dùng \"to be\", không dùng \"have\".", "topic": "giao tiếp", "level": "A2" },
+  { "dont": "It depends of the weather.", "say": "It depends on the weather.", "vi": "\"depend on\", không phải \"depend of\".", "topic": "đời sống", "level": "B1" },
+  { "dont": "I'm boring at work.", "say": "I'm bored at work.", "vi": "Cảm thấy chán → \"bored\"; \"boring\" là gây chán.", "topic": "công việc", "level": "B1" },
+  { "dont": "How to say this in English?", "say": "How do you say this in English?", "vi": "Câu hỏi cần \"do you\".", "topic": "giao tiếp", "level": "A2" },
+  { "dont": "I will call you when I will arrive.", "say": "I will call you when I arrive.", "vi": "Sau \"when\" chỉ tương lai, dùng hiện tại đơn.", "topic": "giao tiếp", "level": "B2" },
+  { "dont": "He is good in English.", "say": "He is good at English.", "vi": "\"good at\", không phải \"good in\".", "topic": "công việc", "level": "B1" },
+  { "dont": "I go to work by foot.", "say": "I go to work on foot.", "vi": "\"on foot\", không dùng \"by foot\".", "topic": "đời sống", "level": "B1" },
+  { "dont": "Yesterday I have seen a movie.", "say": "Yesterday I saw a movie.", "vi": "Có mốc quá khứ \"yesterday\" → quá khứ đơn.", "topic": "phim ảnh", "level": "B2" }
+]

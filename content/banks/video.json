@@ -1,0 +1,4 @@
+[
+  { "id": "vid_demo_youtube", "type": "video", "level": "basic", "topic": "video", "status": "draft", "content": { "title": "(Demo) Dán link YouTube để nhúng video", "meaning_vi": "Thay url bằng link YouTube/TikTok/Facebook/Instagram/Vimeo của bạn.", "url": "https://www.youtube.com/watch?v=arj7oStGLkU", "source": "demo" } },
+  { "id": "vid_demo_short", "type": "video", "level": "basic", "topic": "video", "status": "draft", "content": { "title": "(Demo) Video dọc — YouTube Shorts / TikTok", "meaning_vi": "Link dạng Shorts/TikTok/Reels sẽ tự hiển thị khung dọc 9:16.", "url": "https://www.youtube.com/shorts/arj7oStGLkU", "source": "demo" } }
+]

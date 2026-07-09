@@ -1,0 +1,358 @@
+[
+  {
+    "type": "grammar",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "I very like it.",
+      "say": "I really like it. / I like it a lot.",
+      "explain_vi": "\"very\" không đứng trước động từ; dùng \"really\" hoặc \"a lot\"."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "I have 25 years old.",
+      "say": "I am 25 years old.",
+      "explain_vi": "Tuổi dùng động từ \"to be\", không dùng \"have\"."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "Yesterday I go to the office.",
+      "say": "Yesterday I went to the office.",
+      "explain_vi": "Việc đã xảy ra hôm qua phải chia quá khứ: go → went."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "I very tired.",
+      "say": "I'm very tired.",
+      "explain_vi": "Câu tiếng Anh cần động từ \"to be\"; đừng bỏ \"am/is/are\"."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "intermediate",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "I look forward to see you.",
+      "say": "I look forward to seeing you.",
+      "explain_vi": "Sau \"look forward to\", động từ thêm -ing."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "intermediate",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "I'm agree with you.",
+      "say": "I agree with you.",
+      "explain_vi": "\"agree\" là động từ thường, không dùng \"am/is/are\" trước nó."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "intermediate",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "She didn't went home.",
+      "say": "She didn't go home.",
+      "explain_vi": "Sau \"didn't\", động từ ở dạng nguyên thể."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "dont": "How to say this in English?",
+      "say": "How do you say this in English?",
+      "explain_vi": "Câu hỏi cần chủ ngữ + trợ động từ: \"do you\"."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "intermediate",
+    "topic": "office",
+    "status": "published",
+    "content": {
+      "dont": "I will send you the file yesterday.",
+      "say": "I sent you the file yesterday.",
+      "explain_vi": "\"yesterday\" đi với quá khứ, không dùng \"will\"."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "advanced",
+    "topic": "office",
+    "status": "published",
+    "content": {
+      "dont": "Please explain me the plan.",
+      "say": "Please explain the plan to me.",
+      "explain_vi": "\"explain\" cần \"to me\", không nói \"explain me\"."
+    }
+  },
+  {
+    "type": "grammar",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "draft",
+    "content": {
+      "dont": "I'm boring.",
+      "say": "I'm bored.",
+      "explain_vi": "\"boring\" = gây chán; \"bored\" = cảm thấy chán. Bạn đang thấy chán → bored."
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "basic",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "question": "Choose the natural reply: \"Thanks a lot!\"",
+      "options": [
+        "No star where.",
+        "You're welcome.",
+        "Same to you.",
+        "I very happy."
+      ],
+      "correct": 1,
+      "explain_vi": "Đáp lại lời cảm ơn tự nhiên nhất là \"You're welcome.\""
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "basic",
+    "topic": "mistake-vn",
+    "status": "published",
+    "content": {
+      "question": "Pick the correct sentence.",
+      "options": [
+        "I go to school yesterday.",
+        "I went to school yesterday.",
+        "I going to school yesterday.",
+        "I gone to school yesterday."
+      ],
+      "correct": 1,
+      "explain_vi": "\"yesterday\" cần quá khứ đơn: went."
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "intermediate",
+    "topic": "office",
+    "status": "published",
+    "content": {
+      "question": "\"Let's ___ base tomorrow about the budget.\"",
+      "options": [
+        "touch",
+        "hit",
+        "catch",
+        "make"
+      ],
+      "correct": 0,
+      "explain_vi": "Cụm chuẩn là \"touch base\" = trao đổi nhanh."
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "basic",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "question": "Which is correct?",
+      "options": [
+        "He don't like coffee.",
+        "He doesn't likes coffee.",
+        "He doesn't like coffee.",
+        "He not like coffee."
+      ],
+      "correct": 2,
+      "explain_vi": "Ngôi thứ ba số ít dùng \"doesn't\" + động từ nguyên thể."
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "intermediate",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "question": "Best natural phrasing:",
+      "options": [
+        "I'm looking forward to meet you.",
+        "I'm looking forward to meeting you.",
+        "I look forward meet you.",
+        "I looking forward to meet you."
+      ],
+      "correct": 1,
+      "explain_vi": "Sau \"look forward to\" dùng V-ing: meeting."
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "basic",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "question": "Someone sneezes. You say:",
+      "options": [
+        "Bless you.",
+        "Good luck.",
+        "Well done.",
+        "Cheers."
+      ],
+      "correct": 0,
+      "explain_vi": "Khi ai đó hắt hơi, người bản xứ nói \"Bless you.\""
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "advanced",
+    "topic": "office",
+    "status": "published",
+    "content": {
+      "question": "\"I don't have the ___ to take on more work.\"",
+      "options": [
+        "bandwidth",
+        "wideband",
+        "broadband",
+        "width"
+      ],
+      "correct": 0,
+      "explain_vi": "Trong công sở, \"bandwidth\" = thời gian/năng lực làm thêm việc."
+    }
+  },
+  {
+    "type": "quiz",
+    "level": "intermediate",
+    "topic": "mistake-vn",
+    "status": "draft",
+    "content": {
+      "question": "Choose the correct one.",
+      "options": [
+        "I'm agree with you.",
+        "I agree with you.",
+        "I agreed with you now.",
+        "I am agreeing you."
+      ],
+      "correct": 1,
+      "explain_vi": "\"agree\" là động từ thường: \"I agree with you.\""
+    }
+  },
+  {
+    "type": "quote",
+    "level": "basic",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "quote": "Better late than never.",
+      "meaning_vi": "Muộn còn hơn không.",
+      "context_vi": "Dùng khi làm điều gì trễ nhưng vẫn kịp/vẫn tốt."
+    }
+  },
+  {
+    "type": "quote",
+    "level": "basic",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "quote": "Easy does it.",
+      "meaning_vi": "Từ từ thôi, nhẹ nhàng thôi.",
+      "context_vi": "Khuyên ai đó bình tĩnh, làm cẩn thận."
+    }
+  },
+  {
+    "type": "quote",
+    "level": "intermediate",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "quote": "It is what it is.",
+      "meaning_vi": "Chuyện đã vậy rồi, chấp nhận thôi.",
+      "context_vi": "Nói khi không thể thay đổi được tình huống."
+    }
+  },
+  {
+    "type": "quote",
+    "level": "intermediate",
+    "topic": "office",
+    "status": "published",
+    "content": {
+      "quote": "Let's play it by ear.",
+      "meaning_vi": "Cứ tùy tình hình mà quyết.",
+      "context_vi": "Khi chưa có kế hoạch cố định, làm tới đâu tính tới đó."
+    }
+  },
+  {
+    "type": "quote",
+    "level": "basic",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "quote": "So far, so good.",
+      "meaning_vi": "Tới giờ vẫn ổn.",
+      "context_vi": "Cập nhật rằng mọi thứ đang tiến triển tốt."
+    }
+  },
+  {
+    "type": "quote",
+    "level": "advanced",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "quote": "Don't sweat the small stuff.",
+      "meaning_vi": "Đừng bận tâm mấy chuyện nhỏ.",
+      "context_vi": "Khuyên ai đừng lo lắng những điều vặt vãnh."
+    }
+  },
+  {
+    "type": "quote",
+    "level": "intermediate",
+    "topic": "daily",
+    "status": "draft",
+    "content": {
+      "quote": "Give it a shot.",
+      "meaning_vi": "Cứ thử xem sao.",
+      "context_vi": "Động viên ai đó thử làm điều gì đó."
+    }
+  },
+  {
+    "type": "video",
+    "level": "intermediate",
+    "topic": "daily",
+    "status": "published",
+    "content": {
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+      "title": "How to greet naturally",
+      "meaning_vi": "Cách chào hỏi tự nhiên trong hội thoại hằng ngày."
+    }
+  },
+  {
+    "type": "video",
+    "level": "advanced",
+    "topic": "office",
+    "status": "published",
+    "content": {
+      "src": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+      "title": "Sounding polite at work",
+      "meaning_vi": "Nói lịch sự, chuyên nghiệp nơi công sở."
+    }
+  }
+]

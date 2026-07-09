@@ -1,0 +1,23 @@
+/node_modules
+/.next
+/out
+/build
+*.tsbuildinfo
+next-env.d.ts
+
+# Local DB (legacy SQLite artifacts + backups — app now uses Postgres)
+/data/*.db
+/data/*.db-*
+/data/*.bak*
+
+# Env
+.env
+.env*.local
+
+# Personal Claude settings (shared config in settings.json is committed)
+.claude/settings.local.json
+
+.DS_Store
+
+# On-demand TTS cache (regenerated lazily)
+public/audio/tts/

@@ -1,0 +1,20 @@
+[
+  { "q": "One step at a time.", "vi": "Từng bước một thôi.", "ctx": "Động viên khi việc quá nhiều.", "topic": "suy nghĩ", "level": "A2" },
+  { "q": "It's not a big deal.", "vi": "Chuyện nhỏ mà, không sao đâu.", "ctx": "Trấn an ai đó.", "topic": "giao tiếp", "level": "A2" },
+  { "q": "Let's play it by ear.", "vi": "Cứ tùy tình hình mà quyết.", "ctx": "Khi chưa có kế hoạch cố định.", "topic": "công việc", "level": "B2" },
+  { "q": "It is what it is.", "vi": "Chuyện đã vậy rồi, chấp nhận thôi.", "ctx": "Khi không thay đổi được gì.", "topic": "suy nghĩ", "level": "B1" },
+  { "q": "So far, so good.", "vi": "Tới giờ vẫn ổn.", "ctx": "Cập nhật tiến độ.", "topic": "công việc", "level": "A2" },
+  { "q": "Better late than never.", "vi": "Muộn còn hơn không.", "ctx": "Làm điều gì trễ nhưng vẫn kịp.", "topic": "đời sống", "level": "B1" },
+  { "q": "Don't sweat the small stuff.", "vi": "Đừng bận tâm chuyện nhỏ.", "ctx": "Khuyên đừng lo vặt vãnh.", "topic": "suy nghĩ", "level": "B2" },
+  { "q": "Give it a shot.", "vi": "Cứ thử xem sao.", "ctx": "Động viên ai thử làm.", "topic": "giao tiếp", "level": "B1" },
+  { "q": "Take your time.", "vi": "Cứ từ từ, không vội.", "ctx": "Bảo ai đừng gấp.", "topic": "giao tiếp", "level": "A2" },
+  { "q": "That makes sense.", "vi": "Nghe hợp lý đấy.", "ctx": "Đồng tình sau khi hiểu.", "topic": "giao tiếp", "level": "A2" },
+  { "q": "Let's call it a day.", "vi": "Nghỉ hôm nay ở đây thôi.", "ctx": "Kết thúc công việc trong ngày.", "topic": "công việc", "level": "B1" },
+  { "q": "No pain, no gain.", "vi": "Không khổ luyện thì không thành công.", "ctx": "Nói về cố gắng.", "topic": "suy nghĩ", "level": "B1" },
+  { "q": "Easy does it.", "vi": "Từ từ, nhẹ nhàng thôi.", "ctx": "Khuyên làm cẩn thận.", "topic": "đời sống", "level": "B2" },
+  { "q": "I owe you one.", "vi": "Tôi nợ bạn một lần đấy.", "ctx": "Cảm ơn khi được giúp.", "topic": "giao tiếp", "level": "B1" },
+  { "q": "Let's keep it simple.", "vi": "Cứ làm cho đơn giản thôi.", "ctx": "Tránh phức tạp hóa.", "topic": "công việc", "level": "B1" },
+  { "q": "First come, first served.", "vi": "Ai đến trước được trước.", "ctx": "Nói về thứ tự ưu tiên.", "topic": "đời sống", "level": "B2" },
+  { "q": "You live and you learn.", "vi": "Sống rồi rút kinh nghiệm thôi.", "ctx": "Nói sau khi mắc lỗi.", "topic": "suy nghĩ", "level": "B2" },
+  { "q": "Let me sleep on it.", "vi": "Để tôi suy nghĩ qua đêm đã.", "ctx": "Chưa quyết vội, cần thời gian.", "topic": "suy nghĩ", "level": "B2" }
+]

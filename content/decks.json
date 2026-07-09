@@ -1,0 +1,53 @@
+[
+  {
+    "id": "daily-starter",
+    "title": "Daily Conversation",
+    "description": "Cụm từ & câu nói dùng hằng ngày.",
+    "topic": "daily",
+    "level": "basic",
+    "is_premium": 0,
+    "match": {
+      "topic": "daily"
+    }
+  },
+  {
+    "id": "office-english",
+    "title": "Office English",
+    "description": "Tiếng Anh công sở: họp, email, trao đổi.",
+    "topic": "office",
+    "level": "intermediate",
+    "is_premium": 0,
+    "match": {
+      "topic": "office"
+    }
+  },
+  {
+    "id": "vn-mistakes-pro",
+    "title": "Lỗi người Việt hay sai",
+    "description": "Những lỗi ngữ pháp/diễn đạt phổ biến của người Việt — sửa cho chuẩn.",
+    "topic": "mistake-vn",
+    "level": null,
+    "is_premium": 0,
+    "match": {
+      "topic": "mistake-vn"
+    }
+  },
+  {
+    "id": "speak-natural",
+    "title": "Nói tự nhiên như người bản xứ",
+    "description": "Idiom, quote và cách diễn đạt nâng cao để nghe tự nhiên hơn.",
+    "topic": null,
+    "level": "advanced",
+    "is_premium": 0,
+    "match": {
+      "level": [
+        "intermediate",
+        "advanced"
+      ],
+      "type": [
+        "vocab",
+        "quote"
+      ]
+    }
+  }
+]

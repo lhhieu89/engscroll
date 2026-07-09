@@ -1,0 +1,39 @@
+{
+  "name": "engscroll",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EngScroll — a vertical feed to learn English by scrolling. React OK/New, save what matters.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs generate",
+    "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
+    "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push",
+    "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
+    "seed:banks": "node --env-file=.env.local scripts/seed-banks.mjs",
+    "build:banks": "node scripts/build-banks.mjs",
+    "build:icspeak": "node scripts/build-icspeak-banks.mjs",
+    "build:tips": "node scripts/build-grammar-tips.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.23.0",
+    "msedge-tts": "^2.0.6",
+    "next": "^16.2.10",
+    "postgres": "^3.4.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
+    "@types/node": "^26.1.0",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "drizzle-kit": "^0.31.10",
+    "tailwindcss": "^4.3.2",
+    "typescript": "^6.0.3"
+  }
+}
