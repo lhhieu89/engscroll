@@ -19,5 +19,6 @@ next-env.d.ts
 
 .DS_Store
 
-# On-demand TTS cache (regenerated lazily)
+# Generated TTS audio — served on-demand via /api/tts (no committed files needed)
 public/audio/tts/
+public/audio/ex/
