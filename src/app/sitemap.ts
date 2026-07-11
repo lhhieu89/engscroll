@@ -2,6 +2,11 @@ import type { MetadataRoute } from "next";
 import { abs } from "../lib/site";
 import { listSlugs, pathFor, KINDS, type Kind } from "../lib/seo";
 
+// Generated at request time, not build time: listSlugs() queries Postgres, which
+// isn't reachable during `next build`. force-dynamic keeps the sitemap fresh as
+// the content library grows without a rebuild.
+export const dynamic = "force-dynamic";
+
 // Chunked sitemap: id 0 = static + hubs, id 1/2/3 = word/phrase/grammar landing
 // pages. Next exposes each at /sitemap/<id>.xml and auto-generates the index at
 // /sitemap.xml. Chunking keeps each file well under the 50k-URL limit as the
