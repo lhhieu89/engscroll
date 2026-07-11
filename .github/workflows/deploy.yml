@@ -1,0 +1,74 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      no_cache:
+        description: "Build with --no-cache (default true so NEXT_PUBLIC_* re-inline)"
+        type: boolean
+        default: true
+      skip_seed:
+        description: "Skip re-seeding content banks (faster; use when only code changed)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          command_timeout: "30m"
+          script: |
+            set -euo pipefail
+            cd /var/www/engscroll
+
+            # Hard reset to origin/main so the working tree exactly matches main
+            # (a plain pull can leave local commits / merges and ship a stale bundle).
+            git fetch origin main
+            git reset --hard origin/main
+
+            COMPOSE="docker compose -f docker-compose.prod.yml"
+
+            # NEXT_PUBLIC_* are inlined at build time → default to --no-cache so a
+            # changed env value can never be served from a stale layer.
+            BUILD_FLAGS="--no-cache"
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.no_cache }}" = "false" ]; then
+              BUILD_FLAGS=""
+            fi
+
+            # Build both images (runner + tools share the same source layers).
+            $COMPOSE build $BUILD_FLAGS web
+            $COMPOSE --profile tools build tools
+
+            # PostgreSQL is host-installed (not a container). Apply Drizzle
+            # migrations from the tools image (full deps incl. drizzle-kit).
+            $COMPOSE --profile tools run --rm tools npm run db:migrate:deploy
+
+            # Content banks are the source of truth and the seed is idempotent
+            # (stable ids + ON CONFLICT) → re-seed so committed content ships,
+            # unless explicitly skipped for a code-only deploy.
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.skip_seed }}" = "true" ]; then
+              echo "▸ Skipping content seed (skip_seed=true)."
+            else
+              echo "▸ Seeding content banks…"
+              $COMPOSE --profile tools run --rm tools npm run seed:banks:deploy
+            fi
+
+            # (Re)create the web container with the fresh image.
+            $COMPOSE up -d --force-recreate web
+
+            docker image prune -f
+            $COMPOSE ps

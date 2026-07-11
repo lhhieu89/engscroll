@@ -1,0 +1,26 @@
+node_modules
+.next
+out
+build
+.git
+.github
+.claude
+.vercel
+.turbo
+.eslintcache
+.DS_Store
+*.log
+*.tsbuildinfo
+next-env.d.ts
+# Runtime-generated TTS audio (regenerated on demand) — keep committed icspeak/.
+public/audio/tts
+public/audio/ex
+# Env — never bake secrets into the image. NEXT_PUBLIC_* arrive via build ARG.
+.env
+.env.*
+!.env.example
+!.env.production.example
+README.md
+docker-compose*.yml
+.dockerignore
+# NOTE: keep Dockerfile, drizzle/, content/, scripts/ — the tools stage needs them.

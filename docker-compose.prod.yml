@@ -1,0 +1,55 @@
+# Production stack for EngScroll.
+#
+# What runs OUTSIDE docker: PostgreSQL (host-installed) + Nginx + TLS (host).
+# The web container uses host networking so DATABASE_URL=...@localhost:5432
+# reaches the host Postgres exactly like a host process would. It binds to
+# 127.0.0.1:${APP_PORT:-3016}; Nginx (also on the host) terminates TLS and
+# reverse-proxies engscroll.com → 127.0.0.1:3016.
+#
+# On the server: cp .env.production.example .env  and fill in real values.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      args:
+        # Compose substitutes from .env in the working dir. NEXT_PUBLIC_* is
+        # inlined at build time → the deploy workflow builds with --no-cache.
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+    image: engscroll-web:latest
+    container_name: engscroll-web
+    restart: unless-stopped
+    env_file:
+      - .env
+    network_mode: host
+    # Next standalone server.js honours HOSTNAME/PORT — bind localhost only.
+    environment:
+      HOSTNAME: 127.0.0.1
+      PORT: ${APP_PORT:-3016}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:${APP_PORT:-3016}/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  # One-off migrate / seed jobs (full deps + drizzle-kit + committed content banks).
+  # Run e.g.:
+  #   docker compose -f docker-compose.prod.yml --profile tools run --rm tools npm run db:migrate:deploy
+  #   docker compose -f docker-compose.prod.yml --profile tools run --rm tools npm run seed:banks:deploy
+  tools:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: tools
+    image: engscroll-tools:latest
+    container_name: engscroll-tools
+    profiles: ["tools"]
+    env_file:
+      - .env
+    network_mode: host
+    restart: "no"

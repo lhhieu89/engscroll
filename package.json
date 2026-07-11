@@ -10,9 +10,11 @@
     "lint": "next lint",
     "db:generate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs generate",
     "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
+    "db:migrate:deploy": "node node_modules/drizzle-kit/bin.cjs migrate",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push",
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "seed:banks": "node --env-file=.env.local scripts/seed-banks.mjs",
+    "seed:banks:deploy": "node scripts/seed-banks.mjs",
     "build:banks": "node scripts/build-banks.mjs",
     "build:icspeak": "node scripts/build-icspeak-banks.mjs",
     "build:tips": "node scripts/build-grammar-tips.mjs"

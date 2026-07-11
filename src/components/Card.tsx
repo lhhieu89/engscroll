@@ -483,9 +483,15 @@ function videoEmbed(url?: string): { src: string; vertical: boolean } | null {
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./, "");
+    // YouTube needs playlist=<id> for a single clip to loop; rel=0 + modestbranding
+    // trim related/branding chrome, controls stay on by default.
+    const yt = (id: string, vertical: boolean) => ({
+      src: `https://www.youtube-nocookie.com/embed/${id}?loop=1&playlist=${id}&rel=0&modestbranding=1&playsinline=1`,
+      vertical,
+    });
     if (host === "youtu.be") {
       const id = u.pathname.slice(1);
-      return id ? { src: `https://www.youtube-nocookie.com/embed/${id}`, vertical: false } : null;
+      return id ? yt(id, false) : null;
     }
     if (host.endsWith("youtube.com")) {
       let id = u.searchParams.get("v");
@@ -494,24 +500,33 @@ function videoEmbed(url?: string): { src: string; vertical: boolean } | null {
       const embed = u.pathname.match(/^\/embed\/([^/]+)/);
       if (shorts) { id = shorts[1]; vertical = true; }
       else if (embed) id = embed[1];
-      return id ? { src: `https://www.youtube-nocookie.com/embed/${id}`, vertical } : null;
+      return id ? yt(id, vertical) : null;
     }
     if (host.endsWith("vimeo.com")) {
       const id = u.pathname.split("/").filter(Boolean)[0];
-      return /^\d+$/.test(id) ? { src: `https://player.vimeo.com/video/${id}`, vertical: false } : null;
+      // loop on; title/byline/portrait off hides the author info overlay.
+      return /^\d+$/.test(id)
+        ? { src: `https://player.vimeo.com/video/${id}?loop=1&title=0&byline=0&portrait=0`, vertical: false }
+        : null;
     }
     if (host.endsWith("tiktok.com")) {
       const m = u.pathname.match(/\/video\/(\d+)/);
-      return m ? { src: `https://www.tiktok.com/embed/v2/${m[1]}`, vertical: true } : null;
+      // Player API (player/v1) shows the video only — no caption/comments/music
+      // chrome that the classic embed/v2 card renders. Controls stay on.
+      return m
+        ? { src: `https://www.tiktok.com/player/v1/${m[1]}?description=0&music_info=0&loop=1`, vertical: true }
+        : null;
     }
     if (host.endsWith("instagram.com")) {
       const m = u.pathname.match(/\/(p|reel|tv)\/([^/]+)/);
       return m ? { src: `https://www.instagram.com/${m[1]}/${m[2]}/embed`, vertical: true } : null;
     }
     if (host.endsWith("facebook.com") || host === "fb.watch") {
+      // Reels are 9:16 — everything else (watch/videos) is treated as landscape.
+      const vertical = /\/reel(s)?\//.test(u.pathname);
       return {
         src: `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false`,
-        vertical: false,
+        vertical,
       };
     }
     return null;
