@@ -22,7 +22,7 @@ lướt và phản xạ OK / New. Session 3–5 phút.
 ```bash
 npm install
 cp .env.example .env.local       # đặt DATABASE_URL (+ tuỳ chọn Google keys / ADMIN_KEY)
-createdb endscroll               # tạo DB Postgres (nếu chưa có)
+createdb engscroll               # tạo DB Postgres (nếu chưa có)
 npm run db:migrate               # tạo bảng (production) — hoặc `npm run db:push` (dev nhanh)
 npm run seed:banks               # nạp content từ content/banks/*.json → Postgres
 npm run dev                      # http://localhost:3000
