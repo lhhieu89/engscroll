@@ -26,6 +26,12 @@ ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# lib/db throws at import if DATABASE_URL is unset, and `next build` imports every
+# route to collect page data. postgres.js connects lazily (only on first query),
+# so this throwaway URL is never dialed — the real one comes from compose env at
+# runtime. Keeps the build self-contained without baking a real credential.
+ENV DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build"
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
