@@ -65,6 +65,10 @@ jobs:
             else
               echo "▸ Seeding content banks…"
               $COMPOSE --profile tools run --rm tools npm run seed:banks:deploy
+              # seed upserts don't touch cards.slug → backfill SEO slugs for any
+              # newly inserted cards (idempotent, recomputes from headword).
+              echo "▸ Backfilling SEO slugs…"
+              $COMPOSE --profile tools run --rm tools npm run backfill:slugs:deploy
             fi
 
             # (Re)create the web container with the fresh image.

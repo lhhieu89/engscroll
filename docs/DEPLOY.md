@@ -43,6 +43,7 @@ nginx script to move off 3016; change `DOMAIN`/`EMAIL` for the SSL script.
    $COMPOSE --profile tools build tools
    $COMPOSE --profile tools run --rm tools npm run db:migrate:deploy
    $COMPOSE --profile tools run --rm tools npm run seed:banks:deploy
+   $COMPOSE --profile tools run --rm tools npm run backfill:slugs:deploy
    $COMPOSE up -d web
    curl -fsS http://127.0.0.1:3016/api/health        # → {"ok":true,"status":"live"}
    ```
@@ -89,6 +90,7 @@ $COMPOSE ps                                             # status + health
 $COMPOSE logs -f web                                    # tail logs
 $COMPOSE --profile tools run --rm tools npm run db:migrate:deploy   # migrate only
 $COMPOSE --profile tools run --rm tools npm run seed:banks:deploy   # re-seed content
+$COMPOSE --profile tools run --rm tools npm run backfill:slugs:deploy  # SEO slugs
 $COMPOSE up -d --force-recreate web                     # restart web
 ```
 
