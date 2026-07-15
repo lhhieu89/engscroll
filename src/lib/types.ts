@@ -131,9 +131,9 @@ export interface FeedCard {
 // light sprinkle of video without disturbing the relative mix.
 export const FEED_RATIO: Record<CardType, number> = {
   vocab: 0.34,
-  grammar: 0.2,
+  grammar: 0.18,
   expression: 0.16,
   quiz: 0.16,
-  quote: 0.1,
-  video: 0.04,
+  quote: 0.08,
+  video: 0.08,
 };
