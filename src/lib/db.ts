@@ -8,21 +8,38 @@ import * as schema from "./schema";
 // cached across HMR reloads in dev so we don't leak connections.
 // ---------------------------------------------------------------------------
 
-const url = process.env.DATABASE_URL;
-if (!url) {
-  throw new Error(
-    "DATABASE_URL is not set — copy .env.example to .env.local and set it.",
-  );
-}
-
 const globalForDb = globalThis as unknown as {
   __engscrollSql?: ReturnType<typeof postgres>;
 };
 
-const client = globalForDb.__engscrollSql ?? postgres(url, { max: 10 });
-if (process.env.NODE_ENV !== "production") globalForDb.__engscrollSql = client;
+// Lazily connect on first use, not at import. `next build` imports this module
+// while collecting page data (e.g. the sitemap metadata route) with no DB
+// reachable — an eager DATABASE_URL check there fails the build. Deferring the
+// check to the first query keeps the connection (and the error) at request time.
+let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
+function getDb() {
+  if (dbInstance) return dbInstance;
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL is not set — copy .env.example to .env.local and set it.",
+    );
+  }
+  const client = globalForDb.__engscrollSql ?? postgres(url, { max: 10 });
+  if (process.env.NODE_ENV !== "production") globalForDb.__engscrollSql = client;
+  dbInstance = drizzle(client, { schema });
+  return dbInstance;
+}
 
-export const db = drizzle(client, { schema });
+// Proxy so existing `db.execute(...)` call sites keep working while the real
+// Drizzle instance is created only on first property access.
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
+  get(_target, prop) {
+    const real = getDb() as unknown as Record<string | symbol, unknown>;
+    const value = real[prop];
+    return typeof value === "function" ? value.bind(real) : value;
+  },
+});
 
 // SQL fragments reproducing SQLite's datetime('now') / date('now') as the same
 // UTC "YYYY-MM-DD HH:MM:SS" / "YYYY-MM-DD" text format the app already expects.
