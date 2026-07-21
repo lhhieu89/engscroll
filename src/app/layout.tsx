@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION } from "../lib/site";
+import GoogleAnalytics from "../components/GoogleAnalytics";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -56,7 +57,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        {children}
+        <GoogleAnalytics />
+      </body>
     </html>
   );
 }
